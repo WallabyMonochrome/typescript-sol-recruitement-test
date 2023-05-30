@@ -1,10 +1,13 @@
+'use client';
 import React, { useEffect, useState } from "react";
 import Layout from "@/pages/layout";
 import styles from "../styles/wallet.module.scss"
 import { useQuery } from 'react-query';
 import axios from 'axios';
 import { stringToBytes } from "viem";
-import { useAccount, useContractRead, usePublicClient, useWalletClient, useContractWrite, usePrepareContractWrite } from "wagmi";
+import {
+    useAccount, useContractRead, usePublicClient, useWalletClient, useContractWrite, usePrepareContractWrite, useWaitForTransaction
+} from "wagmi";
 import { useMutation } from 'react-query';
 import CustomButton from "@/components/CustomButton/CustomButton";
 import { NFTABI } from "../asset/NFTAbi"
@@ -18,6 +21,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_REACT_BACKEND_URL;
 
 function Wallet() {
     const toast = useToast()
+    const [isMounted, setIsMounted] = useState(false);
     const publicClient = usePublicClient();
     const {address, isConnected} = useAccount();
     const {isLoading, error, isSuccess, data, refetch} = useQuery(['getUserNFT', address], () => getUserNFTs(address));
@@ -25,16 +29,26 @@ function Wallet() {
     const mutationApproval = useMutation(({nftAddress, nftId}) => approveNFT(nftAddress, nftId, address, sendApprove, publicClient));
     const mutationStacking = useMutation(({nftAddress, nftId}) => stackNFT(nftAddress, nftId, address, sendApprove, publicClient));
     const {
-        write: sendApprove, isError: sendApproveError, isSuccess: sendApproveSuccess,
+        data: approveData, write: sendApprove, isError: sendApproveError, isSuccess: sendApproveSuccess,
     } = useContractWrite({
         abi: NFTABI, functionName: "approve",
     });
-
     const {
-        write: sendStacking, isError: sendStackingError, isSuccess: sendStackingSuccess,
+        data: stackData, write: sendStacking, isError: sendStackingError, isSuccess: sendStackingSuccess,
     } = useContractWrite({
         abi: STACKINGABI, functionName: "stackNFT",
     });
+    const {isLoading: approveLoadingTx, isSuccess: approveSuccessTx} = useWaitForTransaction({
+        hash: approveData?.hash,
+    });
+    const {isLoading: stackingLoadingTx, isSuccess: stackSuccessTx} = useWaitForTransaction({
+        hash: stackData?.hash,
+    })
+
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
     // Toaster for Approval
     useEffect(() => {
         if (sendApproveError) {
@@ -45,10 +59,16 @@ function Wallet() {
         if (sendApproveSuccess) {
             refetch();
             toast({
+                title: 'Approve broadcast wait for confirmation !', status: 'success', duration: 3000, isClosable: true,
+            });
+        }
+        if (approveSuccessTx) {
+            refetch();
+            toast({
                 title: 'Approve success !', status: 'success', duration: 3000, isClosable: true,
             });
         }
-    }, [sendApproveError, sendApproveSuccess]);
+    }, [sendApproveError, sendApproveSuccess, approveSuccessTx, approveLoadingTx]);
     // Toaster for Stacking
     useEffect(() => {
         if (sendStackingError) {
@@ -56,12 +76,18 @@ function Wallet() {
                 title: 'Error while stacking your NFT', status: 'error', duration: 3000, isClosable: true,
             });
         }
+        if (stackSuccessTx) {
+            refetch();
+            toast({
+                title: 'Stacking confirmed', status: 'success', duration: 3000, isClosable: true,
+            });
+        }
         if (sendStackingSuccess) {
             toast({
                 title: 'Congratulations ! Your NFT is #Stacked', status: 'success', duration: 3000, isClosable: true,
             });
         }
-    }, [sendStackingError, sendStackingSuccess]);
+    }, [sendStackingError, sendStackingSuccess, stackSuccessTx]);
 
     const approveNFT = async (nftAddress, nftId, address, sendApprove) => {
         const stackingContract = (await axios.get(`${BACKEND_URL}/nfts/stacking`)).data;
@@ -111,7 +137,8 @@ function Wallet() {
         Object.keys(userNft).forEach((nftContract) => {
             const ownedIds = userNft[nftContract];
             ownedIds.forEach(async (nft, index) => {
-                renderNFTs.push(<NFTCard key={`${nftContract}${index}`} name={nft.tokenURIData?.name} description={nft.tokenURIData?.description}
+                renderNFTs.push(<NFTCard isActionDisabled={approveLoadingTx || stackingLoadingTx} key={`${nftContract}${index}`} name={nft.tokenURIData?.name}
+                                         description={nft.tokenURIData?.description}
                                          image={nft.tokenURIData?.image} nftId={nft.tokenId} status={nft.status} nftContract={nftContract}
                                          tokenURI={nft.tokenURI} isApproved={nft.isApproved}
                                          mutationApproval={() => mutationApproval.mutate({nftAddress: nftContract, nftId: nft.tokenId})}
@@ -122,7 +149,7 @@ function Wallet() {
     }
 
     return (<Layout>
-        <div className={styles.main}>
+        {isMounted && !isLoading && <div className={styles.main}>
             <h1>My Wallet</h1>
             <div className={styles.nftContainer}>
                 <h2>My NFTs</h2>
@@ -131,7 +158,7 @@ function Wallet() {
                 {!isConnected && <div>Connect your wallet to see your stacked NFTs!</div>}
                 {isLoading && "Loading NFTs..."}
             </div>
-        </div>
+        </div>}
     </Layout>)
 }
 

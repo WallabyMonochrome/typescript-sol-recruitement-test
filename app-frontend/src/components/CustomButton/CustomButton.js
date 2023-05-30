@@ -1,9 +1,8 @@
 import { Button } from "@chakra-ui/react";
 
-// Définition de votre composant bouton
-function CustomButton({onClick, children}) {
+function CustomButton({onClick, disabled, children}) {
     return (
-        <Button colorScheme="teal" onClick={onClick}>
+        <Button isDisabled={disabled} colorScheme="teal" onClick={onClick}>
             {children}
         </Button>
     );

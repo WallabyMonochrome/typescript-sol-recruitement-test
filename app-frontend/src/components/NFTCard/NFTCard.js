@@ -24,7 +24,7 @@ function _getStackingMsg(difference) {
     }
 }
 
-function NFTCard({name, description, image, nftId, stackingTime, status, isApproved, mutationApproval, mutationStacking, mutationWithdraw}) {
+function NFTCard({name, description, image, nftId, stackingTime, status, isApproved, mutationApproval, mutationStacking, mutationWithdraw, isActionDisabled}) {
     let stackingMsg;
     if (stackingTime) {
         let now = new Date();
@@ -41,11 +41,11 @@ return (<div className={styles.cardContainer}>
     <div>Status: {status}</div>
     {stackingMsg && <div>{stackingMsg}</div>}
     {status === "stackable" && mutationApproval && !isApproved &&
-        <div><CustomButton onClick={mutationApproval}>Approve it!</CustomButton></div>}
+        <div><CustomButton disabled={isActionDisabled} onClick={mutationApproval}>Approve it!</CustomButton></div>}
     {status === "stackable" && mutationStacking && isApproved &&
-        <div><CustomButton onClick={mutationStacking}>Stack it!</CustomButton></div>}
+        <div><CustomButton  disabled={isActionDisabled} onClick={mutationStacking}>Stack it!</CustomButton></div>}
     {status === "stacked" && mutationWithdraw &&
-        <div><CustomButton onClick={mutationWithdraw}>Unstack it!</CustomButton></div>}
+        <div><CustomButton  disabled={isActionDisabled} onClick={mutationWithdraw}>Unstack it!</CustomButton></div>}
 </div>)
 
 }

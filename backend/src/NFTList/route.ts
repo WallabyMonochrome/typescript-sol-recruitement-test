@@ -1,7 +1,7 @@
 import {Router, Request, Response} from "express";
 
 import * as listController from "./controller";
-import {joiNFTSchema, joiNFTsSchema, joiNFTsSchema} from "./joi";
+import {joiNFTSchema, joiNFTsSchema} from "./joi";
 
 const listRoutes = Router();
 

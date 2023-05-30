@@ -3,10 +3,10 @@ import {localhost, goerli} from 'viem/chains'
 import {NFTABI} from "../assets/NFTAbi"
 import {STACKINGABI} from "../assets/StackingABI";
 
-let instance = null;
-let instanceStacking = null;
-let stackingAdmin = null;
-let contractsCache = {};
+let instance: any = null;
+let instanceStacking: any = null;
+let stackingAdmin: any = null;
+let contractsCache: { [contractAddress: string]: any } = {};
 const STACKING_CONTRACT = process.env.STACKING_CONTRACT;
 
 export function getViemClient() {

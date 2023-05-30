@@ -11,7 +11,7 @@ const _hashMsg = (msg: string): string => {
 }
 
 function createTreeFromList(nftList: NFTList): any {
-  let nftListFormatted = [];
+  let nftListFormatted: string[] = [];
   const nftContracts = Object.keys(nftList);
   nftContracts.forEach(contract => {
     const ids = nftList[contract];
@@ -36,15 +36,6 @@ function getMerkleProofForNFT(tree: any, contract: string, id: number): any {
   return proof;
 
 }
-
-// const proof = tree.getHexProof(leaves[0]);
-// console.log("Proof for NFTA-1", proof);
-//
-// const isValidProof = tree.verify(proof, leaves[0], root);
-// if (!isValidProof) {
-//   console.log('The proof is not valid.');
-//   return false;
-// }
 
 export {
   createTreeFromList,

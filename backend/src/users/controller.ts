@@ -4,7 +4,7 @@ import httpError from "../errorManagement";
 
 export async function getUserNFTBalance(wallet: string) {
   try {
-    const walletNfts = {};
+    const walletNfts: { [nft: string]: any[] } = {};
     const nftList = await NFTLIStController.getNftList();
     for (const nft of Object.keys(nftList)) {
       const userNFTBalance = await getWalletNFTBalance(wallet, nft);
